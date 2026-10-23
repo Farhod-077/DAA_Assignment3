@@ -39,4 +39,53 @@ public class DSUTest {
         assertEquals(dsu.find(0), dsu.find(2));
         assertNotEquals(dsu.find(0), dsu.find(3));
     }
+    @Test
+    void randomUnionsMatchReference() {
+        int n = 100;
+        Metrics metrics = new Metrics();
+        DSU dsu = new DSU(n, metrics);
+
+        int[] labels = new int[n];
+
+        for (int i = 0; i < n; i++) {
+            labels[i] = i;
+        }
+
+        java.util.Random random = new java.util.Random(42);
+
+        for (int step = 0; step < 1000; step++) {
+            int x = random.nextInt(n);
+            int y = random.nextInt(n);
+
+            int oldLabel = labels[y];
+            int newLabel = labels[x];
+            boolean shouldMerge = oldLabel != newLabel;
+
+            assertEquals(shouldMerge, dsu.union(x, y));
+
+            if (shouldMerge) {
+                for (int i = 0; i < n; i++) {
+                    if (labels[i] == oldLabel) {
+                        labels[i] = newLabel;
+                    }
+                }
+            }
+
+            java.util.Set<Integer> groups =
+                    new java.util.HashSet<>();
+
+            for (int label : labels) {
+                groups.add(label);
+            }
+
+            assertEquals(groups.size(), dsu.components());
+
+            for (int vertex = 0; vertex < n; vertex++) {
+                assertEquals(
+                        labels[x] == labels[vertex],
+                        dsu.find(x) == dsu.find(vertex)
+                );
+            }
+        }
+    }
 }
